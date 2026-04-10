@@ -1,0 +1,131 @@
+*magika.txt* Magika-powered filetype fallback for Neovim.
+
+==============================================================================
+CONTENTS                                                          *magika-toc*
+
+1. Introduction .......................................... |magika-intro|
+2. Installation .......................................... |magika-install|
+3. Configuration ......................................... |magika-config|
+4. Commands .............................................. |magika-cmds|
+5. API ................................................... |magika-api|
+
+==============================================================================
+INTRODUCTION                                                    *magika-intro*
+
+Neovim already has good filetype detection. magika.nvim is for the cases
+where that detection falls back to nothing useful.
+
+By default, Magika only runs when the current buffer filetype is:
+
+- empty
+- "text"
+
+If Neovim has already detected something more specific, magika.nvim leaves
+it alone.
+
+The plugin only runs for normal file-backed buffers. It skips scratch
+buffers, terminals, help buffers, quickfix buffers, and anything else with
+a non-empty 'buftype'. It does not read the buffer into Lua, does not create
+temp files, and does not pipe buffer contents to stdin. It simply passes the
+current file path to the Magika CLI.
+
+This means:
+- unsaved changes are not used for detection
+- unnamed buffers are skipped
+- files that do not exist on disk yet are skipped
+
+Magika is called asynchronously with vim.system(), and results are cached in
+memory using the file path, mtime, and size.
+
+==============================================================================
+INSTALLATION                                                  *magika-install*
+
+Install the Magika CLI first. It needs to be available in $PATH:
+
+>
+    magika --version
+<
+
+With lazy.nvim:
+
+>
+    {
+      "moltinginstar/magika.nvim",
+      lazy = false,
+      opts = {},
+    }
+<
+
+lazy = false is recommended. This plugin registers filetype detection
+autocmds, so it should be loaded during startup rather than on VeryLazy.
+
+Manual setup:
+
+>
+    require("magika").setup()
+<
+
+==============================================================================
+CONFIGURATION                                                  *magika-config*
+
+Default configuration:
+
+>
+    require("magika").setup({
+      enabled = true,
+      filetypes = { "", "text" },
+      magika_cmd = { "magika", "--json" },
+      timeout_ms = 1500,
+      confidence_threshold = 0.8,
+      cache = true,
+    })
+<
+
+filetypes controls when Magika is allowed to run, based on the buffer's
+current filetype.
+
+Magika only applies its result if the buffer still has an allowed filetype
+when the async classification finishes.
+
+The default:
+
+>
+    filetypes = { "", "text" }
+<
+
+This lets Magika run on every normal file-backed buffer:
+
+>
+    filetypes = "*"
+<
+
+This lets you decide yourself:
+
+>
+    filetypes = function(ft)
+      return ft == "" or ft == "text" or ft == "conf"
+    end
+<
+
+==============================================================================
+COMMANDS                                                         *magika-cmds*
+
+:MagikaDetect
+    Run Magika on the current buffer.
+
+    The command forces a Magika run for the current buffer. It still operates
+    on the file on disk, not the unsaved buffer contents.
+
+==============================================================================
+API                                                               *magika-api*
+
+lua require("magika").setup(opts)
+    Configure the plugin and register autocmds.
+
+lua require("magika").maybe_detect(buf)
+    Run fallback detection for {buf} if the current buffer state is eligible.
+
+lua require("magika").detect(buf, opts)
+    Run detection for {buf}. This is the Lua equivalent of :MagikaDetect.
+
+vim:tw=78:ts=8:noet:ft=help:norl:
