@@ -9,7 +9,7 @@ local state = {
 }
 
 local function create_user_command()
-vim.api.nvim_create_user_command("MagikaDetect", function(command_opts)
+  vim.api.nvim_create_user_command("MagikaDetect", function(command_opts)
     local target = command_opts.args ~= "" and tonumber(command_opts.args) or 0
     M.detect(target, { force = true })
   end, {
@@ -24,7 +24,7 @@ local function create_autocmds()
   vim.api.nvim_create_autocmd({ "BufReadPost", "BufWritePost" }, {
     group = group,
     callback = function(args)
-      M.maybe_detect(args.buf)
+      M.detect(args.buf, { force = false })
     end,
   })
 end
@@ -39,14 +39,6 @@ function M.setup(opts)
   create_autocmds()
   create_user_command()
   state.initialized = true
-end
-
-function M.maybe_detect(buf)
-  if not state.options.enabled then
-    return
-  end
-
-  detect.maybe(buf or 0, state.options)
 end
 
 function M.detect(buf, run_opts)

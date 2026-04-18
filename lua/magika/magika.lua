@@ -1,7 +1,46 @@
 local M = {}
 
 local label_overrides = {
+  ace = false,
+  ai = "postscr",
+  appleplist = "xml",
+  asp = "aspvbs",
+  batch = "dosbatch",
+  bazel = "bzl",
+  coff = false,
+  csproj = "xml",
+  eml = "mail",
+  erb = "eruby",
+  gemfile = "ruby",
+  gemspec = "ruby",
+  gitmodules = "gitconfig",
+  gradle = "groovy",
+  hlp = false,
+  ignorefile = "gitignore",
+  ini = "dosini",
+  internetshortcut = "urlshortcut",
+  ipynb = "json",
+  javabytecode = false,
+  jsonl = "json",
+  latex = "tex",
+  m3u = "hlsplaylist",
+  makefile = "make",
+  objectivec = "objc",
+  pdb = false,
+  pickle = false,
+  postscript = "postscr",
+  powershell = "ps1",
+  proteindb = false,
+  pytorch = false,
+  rdf = "xml",
   shell = "sh",
+  sum = false,
+  textproto = "pbtxt",
+  txt = "text",
+  vba = "vb",
+  vcxproj = "xml",
+  winregistry = "registry",
+  xar = false,
 }
 
 local available_filetypes
@@ -91,12 +130,17 @@ local function is_known_filetype(filetype)
   return type(filetype) == "string" and filetype ~= "" and get_available_filetypes()[filetype] == true
 end
 
-function M.resolve_filetype(result)
+local function resolve_filetype(result)
   if type(result) ~= "table" then
     return nil
   end
 
-  local label = label_overrides[result.label] or result.label
+  local override = label_overrides[result.label]
+  if override ~= nil then
+    return override or nil
+  end
+
+  local label = result.label
   if is_known_filetype(label) then
     return label
   end
@@ -125,7 +169,11 @@ function M.classify(path, opts, cb)
         return
       end
 
-      cb(normalize(decode_json(obj.stdout)))
+      local result = normalize(decode_json(obj.stdout))
+      if result then
+        result.filetype = resolve_filetype(result)
+      end
+      cb(result)
     end)
   end)
 end

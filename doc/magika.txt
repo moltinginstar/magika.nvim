@@ -122,10 +122,10 @@ API                                                               *magika-api*
 lua require("magika").setup(opts)
     Configure the plugin and register autocmds.
 
-lua require("magika").maybe_detect(buf)
-    Run fallback detection for {buf} if the current buffer state is eligible.
-
 lua require("magika").detect(buf, opts)
-    Run detection for {buf}. This is the Lua equivalent of :MagikaDetect.
+    Run detection for {buf}. {opts.force} defaults to true, so calling
+    without opts is the Lua equivalent of :MagikaDetect.
+
+    Pass { force = false } to respect fallback eligibility.
 
 vim:tw=78:ts=8:noet:ft=help:norl:

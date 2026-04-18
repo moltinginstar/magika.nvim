@@ -90,7 +90,7 @@ function M.apply(buf, filetype, opts, run_opts)
     end
 
     vim.api.nvim_buf_call(buf, function()
-      if vim.bo[buf].filetype == "text" then
+      if vim.bo[buf].filetype ~= "" then
         vim.bo[buf].filetype = ""
       end
       vim.cmd("setfiletype " .. filetype)
@@ -132,7 +132,7 @@ function M.run(buf, run_opts, opts)
       return
     end
 
-    local filetype = magika.resolve_filetype(result)
+    local filetype = result.filetype
     if not filetype then
       return
     end
@@ -143,10 +143,6 @@ function M.run(buf, run_opts, opts)
 
     M.apply(buf, filetype, opts, run_opts)
   end)
-end
-
-function M.maybe(buf, opts)
-  M.run(buf, { force = false }, opts)
 end
 
 return M
